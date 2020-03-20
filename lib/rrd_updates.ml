@@ -192,6 +192,19 @@ let create_multi prefixandrrds start interval cfopt =
        (fun (_prefix,rrd) ->
           (* Find the rrds that satisfy the requirements *)
           Rrd.find_best_rras rrd pdp_interval cfopt start) prefixandrrds) in
+  let first_rra =
+    match rras with
+    | []                              -> raise No_RRA_Available
+    | (xs::_) when List.length xs = 0 -> raise No_RRA_Available
+    | xs::_                           -> List.nth xs 0
+  in
+  let rras =
+    let only_valid_pdp_and_num_rows rra =
+      rra.rra_pdp_cnt=first_rra.rra_pdp_cnt && rra.rra_row_cnt = first_rra.rra_row_cnt
+    in
+    rras |>
+    List.map (List.filter only_valid_pdp_and_num_rows)
+  in
 
   let legends = Array.concat (List.map2 (fun (prefix,rrd) rras ->
       let ds_legends = Array.map (fun ds -> prefix^ds.ds_name) rrd.rrd_dss in
@@ -202,11 +215,7 @@ let create_multi prefixandrrds start interval cfopt =
   in
 
   let rras = List.flatten rras in
-  let first_rra = match rras with
-  | [] -> raise No_RRA_Available
-  | rra :: _ -> rra in
 
-  let rras = List.filter (fun rra -> rra.rra_pdp_cnt=first_rra.rra_pdp_cnt && rra.rra_row_cnt = first_rra.rra_row_cnt) rras in
   (* The following timestep is that of the archive *)
   let rra_timestep = (Int64.mul first_rrd.timestep (Int64.of_int first_rra.rra_pdp_cnt)) in
 
