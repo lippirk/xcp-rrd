@@ -174,6 +174,7 @@ let json_of_t t =
     'xport' format. *)
 
 let create_multi prefixandrrds start interval cfopt =
+  let () = raise (Failure "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA") in
   let first_rrd = snd (List.hd prefixandrrds) in
 
   let pdp_interval = Int64.to_int (Int64.div interval first_rrd.timestep) in
